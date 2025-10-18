@@ -309,6 +309,11 @@
                     🍼 Troca de Fralda
                 </button>
             </div>
+            <div class="card">
+                <button class="btn btn-primary" onclick="app.goToFormula()">
+                    🍶 Fórmula
+                </button>
+            </div>
         </div>
 
         <!-- Amamentação Screen -->
@@ -384,6 +389,46 @@
                 </div>
             </div>
         </div>
+
+        <!-- Fórmula Screen -->
+        <div id="formulaScreen" class="screen">
+            <button class="back-btn" onclick="app.goToHome()">← Voltar</button>
+            
+            <div class="card">
+                <h2 style="margin-bottom: 20px; text-align: center;">Fórmula</h2>
+                
+                <div id="alertFormula"></div>
+                
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">Data:</span>
+                        <span class="info-value" id="formulaData">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Horário:</span>
+                        <span class="info-value" id="formulaHorario">-</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label for="volumeInput" style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">
+                        Volume (ml):
+                    </label>
+                    <input 
+                        type="number" 
+                        id="volumeInput" 
+                        placeholder="Digite o volume em ml"
+                        min="1"
+                        step="1"
+                        style="width: 100%; padding: 14px; font-size: 18px; border: 2px solid #e5e7eb; border-radius: 8px; font-weight: 600;"
+                    >
+                </div>
+
+                <button class="btn btn-success" onclick="app.confirmarFormula()">
+                    Confirmar
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de Confirmação -->
@@ -416,6 +461,10 @@
                     <div class="info-row">
                         <span class="info-label">Fralda:</span>
                         <span class="info-value" id="confirmFralda">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Volume:</span>
+                        <span class="info-value" id="confirmVolume">-</span>
                     </div>
                 </div>
             </div>
@@ -478,6 +527,11 @@
                     inicio: null,
                     data: null
                 },
+                formula: {
+                    volume: null,
+                    inicio: null,
+                    data: null
+                },
                 pendingData: null
             },
 
@@ -508,6 +562,19 @@
                 this.showScreen('fraldaScreen');
             },
 
+            goToFormula() {
+                this.resetState();
+                const now = new Date();
+                this.state.formula.data = this.formatDate(now);
+                this.state.formula.inicio = this.formatTime(now);
+                
+                document.getElementById('formulaData').textContent = this.state.formula.data;
+                document.getElementById('formulaHorario').textContent = this.state.formula.inicio;
+                document.getElementById('volumeInput').value = '';
+                
+                this.showScreen('formulaScreen');
+            },
+
             showScreen(screenId) {
                 document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
                 document.getElementById(screenId).classList.add('active');
@@ -532,6 +599,12 @@
                     data: null
                 };
                 
+                this.state.formula = {
+                    volume: null,
+                    inicio: null,
+                    data: null
+                };
+                
                 this.state.pendingData = null;
                 
                 document.getElementById('ladoEsquerdo').classList.remove('active');
@@ -542,6 +615,7 @@
                 document.getElementById('infoAmamentacao').style.display = 'none';
                 document.getElementById('alertAmamentacao').innerHTML = '';
                 document.getElementById('alertFralda').innerHTML = '';
+                document.getElementById('alertFormula').innerHTML = '';
             },
 
             // Amamentação
@@ -595,7 +669,8 @@
                     fim: this.state.amamentacao.fim,
                     tipoAtividade: 'Amamentação',
                     mama: this.state.amamentacao.lado,
-                    fralda: '-'
+                    fralda: '-',
+                    volume: '-'
                 });
             },
 
@@ -620,7 +695,32 @@
                     fim: '',
                     tipoAtividade: 'Troca de Fralda',
                     mama: '-',
-                    fralda: tipo
+                    fralda: tipo,
+                    volume: '-'
+                });
+            },
+
+            // Fórmula
+            confirmarFormula() {
+                const volumeInput = document.getElementById('volumeInput');
+                const volume = volumeInput.value.trim();
+                
+                if (!volume || volume <= 0) {
+                    this.showAlert('alertFormula', 'Digite um volume válido em ml', 'error');
+                    volumeInput.focus();
+                    return;
+                }
+                
+                this.state.formula.volume = volume;
+                
+                this.showConfirmModal({
+                    data: this.state.formula.data,
+                    inicio: this.state.formula.inicio,
+                    fim: '',
+                    tipoAtividade: 'Fórmula',
+                    mama: '-',
+                    fralda: '-',
+                    volume: volume
                 });
             },
 
@@ -634,6 +734,7 @@
                 document.getElementById('confirmTipo').textContent = data.tipoAtividade;
                 document.getElementById('confirmMama').textContent = data.mama;
                 document.getElementById('confirmFralda').textContent = data.fralda;
+                document.getElementById('confirmVolume').textContent = data.volume || '-';
                 document.getElementById('modalAlert').innerHTML = '';
                 
                 document.getElementById('confirmModal').classList.add('active');
