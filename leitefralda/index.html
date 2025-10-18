@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="description" content="Registro de amamentação e trocas de fralda">
+    <title>Amamentação & Fraldas</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #1f2937;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            min-height: 56px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4f46e5;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            min-height: 56px;
+            border: 3px solid #e5e7eb;
+            background: white;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #6b7280;
+        }
+
+        .toggle-btn.active {
+            border-color: #6366f1;
+            background: #eef2ff;
+            color: #6366f1;
+        }
+
+        .info-section {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .info-value {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 18px;
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #6366f1;
+            margin: 20px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .fralda-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .btn {
+                min-height: 52px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍼 Amamentação & Fraldas</h1>
+        </header>
+
+        <!-- Home Screen -->
+        <div id="homeScreen" class="screen active">
+            <div class="card">
+                <button class="btn btn-primary" onclick="app.goToAmamentacao()">
+                    🤱 Amamentação
+                </button>
+            </div>
+            <div class="card">
+                <button class="btn btn-primary" onclick="app.goToFralda()">
+                    🍼 Troca de Fralda
+                </button>
+            </div>
+        </div>
+
+        <!-- Amamentação Screen -->
+        <div id="amamentacaoScreen" class="screen">
+            <button class="back-btn" onclick="app.goToHome()">← Voltar</button>
+            
+            <div class="card">
+                <h2 style="margin-bottom: 20px; text-align: center;">Amamentação</h2>
+                
+                <div id="alertAmamentacao"></div>
+                
+                <div class="toggle-group">
+                    <button class="toggle-btn" id="ladoEsquerdo" onclick="app.selectSide('Esquerdo')">
+                        Esquerdo (E)
+                    </button>
+                    <button class="toggle-btn" id="ladoDireito" onclick="app.selectSide('Direito')">
+                        Direito (D)
+                    </button>
+                </div>
+
+                <div id="timerDisplay" class="timer" style="display: none;">00:00</div>
+
+                <div id="infoAmamentacao" class="info-section" style="display: none;">
+                    <div class="info-row">
+                        <span class="info-label">Lado:</span>
+                        <span class="info-value" id="infoLado">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Início:</span>
+                        <span class="info-value" id="infoInicio">-</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" id="btnIniciar" onclick="app.iniciarAmamentacao()">
+                    Iniciar
+                </button>
+                <button class="btn btn-danger" id="btnParar" onclick="app.pararAmamentacao()" style="display: none;">
+                    Parar
+                </button>
+            </div>
+        </div>
+
+        <!-- Fralda Screen -->
+        <div id="fraldaScreen" class="screen">
+            <button class="back-btn" onclick="app.goToHome()">← Voltar</button>
+            
+            <div class="card">
+                <h2 style="margin-bottom: 20px; text-align: center;">Troca de Fralda</h2>
+                
+                <div id="alertFralda"></div>
+                
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">Data:</span>
+                        <span class="info-value" id="fraldaData">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Horário:</span>
+                        <span class="info-value" id="fraldaHorario">-</span>
+                    </div>
+                </div>
+
+                <div class="fralda-grid">
+                    <button class="btn btn-primary" onclick="app.selectFralda('Xixi')">
+                        💧 Xixi
+                    </button>
+                    <button class="btn btn-primary" onclick="app.selectFralda('Cocô')">
+                        💩 Cocô
+                    </button>
+                    <button class="btn btn-primary" onclick="app.selectFralda('Mista')">
+                        💧💩 Mista
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Confirmar Envio</div>
+            <div class="modal-body">
+                <div id="modalAlert"></div>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">Data:</span>
+                        <span class="info-value" id="confirmData">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Início:</span>
+                        <span class="info-value" id="confirmInicio">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Fim:</span>
+                        <span class="info-value" id="confirmFim">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tipo:</span>
+                        <span class="info-value" id="confirmTipo">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Mama:</span>
+                        <span class="info-value" id="confirmMama">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Fralda:</span>
+                        <span class="info-value" id="confirmFralda">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="app.cancelConfirm()">
+                    Cancelar
+                </button>
+                <button class="btn btn-success" style="flex: 1;" id="btnEnviar" onclick="app.enviarDados()">
+                    Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            // Configuração - SUBSTITUA PELA URL DO SEU APPS SCRIPT
+            ENDPOINT_URL: 'https://script.google.com/macros/s/AKfycbxQZpGIyJ6f3VlRrNMYLJJp3gA5MXDjDt_UHmYPXyldYWdz-dOVjjNx_8y8_KeMAdY/exec',
+            
+            state: {
+                currentScreen: 'home',
+                amamentacao: {
+                    lado: null,
+                    inicio: null,
+                    fim: null,
+                    data: null,
+                    timerInterval: null
+                },
+                fralda: {
+                    tipo: null,
+                    inicio: null,
+                    data: null
+                },
+                pendingData: null
+            },
+
+            init() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js');
+                }
+            },
+
+            // Navegação
+            goToHome() {
+                this.resetState();
+                this.showScreen('homeScreen');
+            },
+
+            goToAmamentacao() {
+                this.resetState();
+                this.showScreen('amamentacaoScreen');
+            },
+
+            goToFralda() {
+                this.resetState();
+                const now = new Date();
+                this.state.fralda.data = this.formatDate(now);
+                this.state.fralda.inicio = this.formatTime(now);
+                
+                document.getElementById('fraldaData').textContent = this.state.fralda.data;
+                document.getElementById('fraldaHorario').textContent = this.state.fralda.inicio;
+                
+                this.showScreen('fraldaScreen');
+            },
+
+            showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+            },
+
+            resetState() {
+                if (this.state.amamentacao.timerInterval) {
+                    clearInterval(this.state.amamentacao.timerInterval);
+                }
+                
+                this.state.amamentacao = {
+                    lado: null,
+                    inicio: null,
+                    fim: null,
+                    data: null,
+                    timerInterval: null
+                };
+                
+                this.state.fralda = {
+                    tipo: null,
+                    inicio: null,
+                    data: null
+                };
+                
+                this.state.pendingData = null;
+                
+                document.getElementById('ladoEsquerdo').classList.remove('active');
+                document.getElementById('ladoDireito').classList.remove('active');
+                document.getElementById('btnIniciar').style.display = 'block';
+                document.getElementById('btnParar').style.display = 'none';
+                document.getElementById('timerDisplay').style.display = 'none';
+                document.getElementById('infoAmamentacao').style.display = 'none';
+                document.getElementById('alertAmamentacao').innerHTML = '';
+                document.getElementById('alertFralda').innerHTML = '';
+            },
+
+            // Amamentação
+            selectSide(lado) {
+                this.state.amamentacao.lado = lado;
+                document.getElementById('ladoEsquerdo').classList.toggle('active', lado === 'Esquerdo');
+                document.getElementById('ladoDireito').classList.toggle('active', lado === 'Direito');
+                document.getElementById('alertAmamentacao').innerHTML = '';
+            },
+
+            iniciarAmamentacao() {
+                if (!this.state.amamentacao.lado) {
+                    this.showAlert('alertAmamentacao', 'Selecione o lado', 'error');
+                    return;
+                }
+
+                const now = new Date();
+                this.state.amamentacao.inicio = this.formatTime(now);
+                this.state.amamentacao.data = this.formatDate(now);
+                
+                document.getElementById('infoLado').textContent = this.state.amamentacao.lado;
+                document.getElementById('infoInicio').textContent = this.state.amamentacao.inicio;
+                document.getElementById('infoAmamentacao').style.display = 'block';
+                
+                document.getElementById('btnIniciar').style.display = 'none';
+                document.getElementById('btnParar').style.display = 'block';
+                document.getElementById('timerDisplay').style.display = 'block';
+                
+                document.getElementById('ladoEsquerdo').disabled = true;
+                document.getElementById('ladoDireito').disabled = true;
+                
+                this.startTimer(now);
+            },
+
+            pararAmamentacao() {
+                if (!this.state.amamentacao.inicio) {
+                    this.showAlert('alertAmamentacao', 'Inicie a amamentação primeiro', 'error');
+                    return;
+                }
+
+                const now = new Date();
+                this.state.amamentacao.fim = this.formatTime(now);
+                
+                if (this.state.amamentacao.timerInterval) {
+                    clearInterval(this.state.amamentacao.timerInterval);
+                }
+                
+                this.showConfirmModal({
+                    data: this.state.amamentacao.data,
+                    inicio: this.state.amamentacao.inicio,
+                    fim: this.state.amamentacao.fim,
+                    tipoAtividade: 'Amamentação',
+                    mama: this.state.amamentacao.lado,
+                    fralda: '-'
+                });
+            },
+
+            startTimer(startTime) {
+                this.state.amamentacao.timerInterval = setInterval(() => {
+                    const now = new Date();
+                    const diff = Math.floor((now - startTime) / 1000);
+                    const minutes = Math.floor(diff / 60);
+                    const seconds = diff % 60;
+                    document.getElementById('timerDisplay').textContent = 
+                        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }, 1000);
+            },
+
+            // Fralda
+            selectFralda(tipo) {
+                this.state.fralda.tipo = tipo;
+                
+                this.showConfirmModal({
+                    data: this.state.fralda.data,
+                    inicio: this.state.fralda.inicio,
+                    fim: '',
+                    tipoAtividade: 'Troca de Fralda',
+                    mama: '-',
+                    fralda: tipo
+                });
+            },
+
+            // Modal de Confirmação
+            showConfirmModal(data) {
+                this.state.pendingData = data;
+                
+                document.getElementById('confirmData').textContent = data.data;
+                document.getElementById('confirmInicio').textContent = data.inicio;
+                document.getElementById('confirmFim').textContent = data.fim || '(vazio)';
+                document.getElementById('confirmTipo').textContent = data.tipoAtividade;
+                document.getElementById('confirmMama').textContent = data.mama;
+                document.getElementById('confirmFralda').textContent = data.fralda;
+                document.getElementById('modalAlert').innerHTML = '';
+                
+                document.getElementById('confirmModal').classList.add('active');
+            },
+
+            cancelConfirm() {
+                document.getElementById('confirmModal').classList.remove('active');
+                this.state.pendingData = null;
+            },
+
+            async enviarDados() {
+                if (!this.state.pendingData) return;
+
+                const btnEnviar = document.getElementById('btnEnviar');
+                btnEnviar.disabled = true;
+                btnEnviar.textContent = 'Enviando...';
+
+                try {
+                    const response = await fetch(this.ENDPOINT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(this.state.pendingData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao enviar dados');
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.status === 'ok') {
+                        this.showAlert('modalAlert', 'Enviado com sucesso!', 'success');
+                        setTimeout(() => {
+                            this.cancelConfirm();
+                            this.goToHome();
+                        }, 1500);
+                    } else {
+                        throw new Error(result.message || 'Erro desconhecido');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.showAlert('modalAlert', 
+                        'Falha ao enviar. Verifique a conexão e tente novamente.', 
+                        'error');
+                    btnEnviar.textContent = 'Tentar novamente';
+                } finally {
+                    btnEnviar.disabled = false;
+                }
+            },
+
+            // Utilitários
+            formatDate(date) {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            },
+
+            formatTime(date) {
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            },
+
+            showAlert(elementId, message, type) {
+                const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+                document.getElementById(elementId).innerHTML = 
+                    `<div class="alert ${alertClass}">${message}</div>`;
+            }
+        };
+
+        // Inicializar app
+        app.init();
+    </script>
+</body>
+</html>
