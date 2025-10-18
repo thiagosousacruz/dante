@@ -1,4 +1,4 @@
-const CACHE_NAME = 'amamentacao-fraldas-v1';
+const CACHE_NAME = 'index';
 const ASSETS = [
   './index.html',
   './manifest.json'
