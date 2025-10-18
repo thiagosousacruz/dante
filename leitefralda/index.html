@@ -431,6 +431,35 @@
     </div>
 
     <script>
+        // Service Worker atualizado
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
+                const CACHE_NAME = 'amamentacao-fraldas-v1';
+                const ASSETS = [];
+                
+                self.addEventListener('install', (event) => {
+                    self.skipWaiting();
+                });
+                
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(clients.claim());
+                });
+                
+                self.addEventListener('fetch', (event) => {
+                    // NÃO cachear chamadas ao Google Apps Script
+                    if (event.request.url.includes('script.google.com') || 
+                        event.request.url.includes('script.googleusercontent.com')) {
+                        return;
+                    }
+                    
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => response || fetch(event.request))
+                    );
+                });
+            `));
+        }
+
         const app = {
             // Configuração - SUBSTITUA PELA URL DO SEU APPS SCRIPT
             ENDPOINT_URL: 'https://script.google.com/macros/s/AKfycbxQZpGIyJ6f3VlRrNMYLJJp3gA5MXDjDt_UHmYPXyldYWdz-dOVjjNx_8y8_KeMAdY/exec',
@@ -453,9 +482,7 @@
             },
 
             init() {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('sw.js');
-                }
+                // Service Worker já registrado acima
             },
 
             // Navegação
@@ -617,46 +644,38 @@
                 this.state.pendingData = null;
             },
 
-            async enviarDados() {
+            enviarDados() {
                 if (!this.state.pendingData) return;
 
                 const btnEnviar = document.getElementById('btnEnviar');
                 btnEnviar.disabled = true;
                 btnEnviar.textContent = 'Enviando...';
 
-                try {
-                    const response = await fetch(this.ENDPOINT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(this.state.pendingData)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Erro ao enviar dados');
-                    }
-
-                    const result = await response.json();
-                    
-                    if (result.status === 'ok') {
-                        this.showAlert('modalAlert', 'Enviado com sucesso!', 'success');
-                        setTimeout(() => {
-                            this.cancelConfirm();
-                            this.goToHome();
-                        }, 1500);
-                    } else {
-                        throw new Error(result.message || 'Erro desconhecido');
-                    }
-                } catch (error) {
+                // Usar fetch com redirect: 'follow' para Google Apps Script
+                fetch(this.ENDPOINT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Importante para Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.state.pendingData)
+                })
+                .then(() => {
+                    // Com no-cors, assumimos sucesso se não houver erro de rede
+                    this.showAlert('modalAlert', 'Enviado com sucesso!', 'success');
+                    setTimeout(() => {
+                        this.cancelConfirm();
+                        this.goToHome();
+                    }, 1500);
+                })
+                .catch(error => {
                     console.error('Erro:', error);
                     this.showAlert('modalAlert', 
                         'Falha ao enviar. Verifique a conexão e tente novamente.', 
                         'error');
                     btnEnviar.textContent = 'Tentar novamente';
-                } finally {
                     btnEnviar.disabled = false;
-                }
+                });
             },
 
             // Utilitários
