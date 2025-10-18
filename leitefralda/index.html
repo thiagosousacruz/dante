@@ -273,6 +273,70 @@
             border: 1px solid #a7f3d0;
         }
 
+        .historico {
+            margin-top: 30px;
+        }
+
+        .historico-header {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .historico-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .historico-item {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .historico-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .historico-datetime {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .historico-tipo {
+            color: #1f2937;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .historico-empty {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .historico-loading {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            color: #6366f1;
+            font-weight: 500;
+        }
+
         .fralda-grid {
             display: grid;
             gap: 12px;
@@ -317,6 +381,14 @@
                 <button class="btn btn-primary" onclick="app.goToFormula()">
                     🍶 Fórmula
                 </button>
+            </div>
+
+            <!-- Histórico de Atividades -->
+            <div class="historico">
+                <div class="historico-header">📋 Últimas Atividades</div>
+                <div id="historicoList" class="historico-list">
+                    <div class="historico-loading">Carregando histórico...</div>
+                </div>
             </div>
         </div>
 
@@ -521,10 +593,15 @@
                 pendingData: null
             },
 
+            init() {
+                // Inicialização do app
+            },
+
             // Navegação
             goToHome() {
                 this.resetState();
                 this.showScreen('homeScreen');
+                this.carregarHistorico();
             },
 
             goToAmamentacao() {
@@ -765,6 +842,7 @@
                     btnEnviar.disabled = false;
                     btnEnviar.textContent = 'Enviar';
                     
+                    
                     setTimeout(() => {
                         this.cancelConfirm();
                         this.goToHome();
@@ -778,6 +856,45 @@
                     btnEnviar.textContent = 'Tentar novamente';
                     btnEnviar.disabled = false;
                 });
+            },
+
+            // Histórico
+            async carregarHistorico() {
+                const historicoList = document.getElementById('historicoList');
+                historicoList.innerHTML = '<div class="historico-loading">Carregando histórico...</div>';
+
+                try {
+                    const response = await fetch(this.ENDPOINT_URL, {
+                        method: 'GET',
+                        cache: 'no-cache'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'ok' && result.dados && result.dados.length > 0) {
+                        historicoList.innerHTML = result.dados.map(item => `
+                            <div class="historico-item">
+                                <div class="historico-info">
+                                    <div class="historico-tipo">${this.getIconeTipo(item.tipo)} ${item.tipo} - ${item.data} - ${item.inicio}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        historicoList.innerHTML = '<div class="historico-empty">Nenhuma atividade registrada ainda</div>';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar histórico:', error);
+                    historicoList.innerHTML = '<div class="historico-empty">Não foi possível carregar o histórico</div>';
+                }
+            },
+
+            getIconeTipo(tipo) {
+                const icones = {
+                    'Amamentação': '🤱',
+                    'Troca de Fralda': '🍼',
+                    'Fórmula': '🍶'
+                };
+                return icones[tipo] || '📝';
             },
 
             // Utilitários
@@ -804,6 +921,11 @@
 
         // Inicializar app
         app.init();
+        
+        // Carregar histórico inicial
+        if (document.getElementById('homeScreen').classList.contains('active')) {
+            app.carregarHistorico();
+        }
     </script>
 </body>
 </html>
