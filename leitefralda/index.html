@@ -591,6 +591,8 @@
                 
                 document.getElementById('ladoEsquerdo').classList.remove('active');
                 document.getElementById('ladoDireito').classList.remove('active');
+                document.getElementById('ladoEsquerdo').disabled = false;
+                document.getElementById('ladoDireito').disabled = false;
                 document.getElementById('btnIniciar').style.display = 'block';
                 document.getElementById('btnParar').style.display = 'none';
                 document.getElementById('timerDisplay').style.display = 'none';
@@ -702,7 +704,7 @@
                     tipoAtividade: 'Fórmula',
                     mama: '-',
                     fralda: '-',
-                    volume: volume
+                    volume: volume + ' ml'
                 });
             },
 
@@ -725,6 +727,18 @@
             cancelConfirm() {
                 document.getElementById('confirmModal').classList.remove('active');
                 this.state.pendingData = null;
+                
+                // Resetar o botão Enviar
+                const btnEnviar = document.getElementById('btnEnviar');
+                btnEnviar.disabled = false;
+                btnEnviar.textContent = 'Enviar';
+                
+                // Se estava na tela de amamentação e cancelou após parar, resetar tudo
+                const currentScreen = document.querySelector('.screen.active');
+                if (currentScreen && currentScreen.id === 'amamentacaoScreen') {
+                    this.resetState();
+                    this.goToAmamentacao();
+                }
             },
 
             enviarDados() {
@@ -746,6 +760,11 @@
                 .then(() => {
                     // Com no-cors, assumimos sucesso se não houver erro de rede
                     this.showAlert('modalAlert', 'Enviado com sucesso!', 'success');
+                    
+                    // Resetar o botão
+                    btnEnviar.disabled = false;
+                    btnEnviar.textContent = 'Enviar';
+                    
                     setTimeout(() => {
                         this.cancelConfirm();
                         this.goToHome();
