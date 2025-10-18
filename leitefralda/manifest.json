@@ -2,21 +2,24 @@
   "name": "Amamentação & Fraldas",
   "short_name": "AmamFraldas",
   "description": "Registro de amamentação e trocas de fralda",
-  "start_url": "./index.html",
+  "start_url": "https://thiagosousacruz.github.io/dante/leitefralda/",
+  "scope": "/dante/leitefralda/",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#6366f1",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
