@@ -2,7 +2,7 @@ const CACHE_NAME = 'amamentacao-fraldas-v1.1';
 const BASE_PATH = '/dante/leitefralda/';
 const ASSETS = [
   BASE_PATH,
-  BASE_PATH + 'index.html',
+  BASE_PATH + 'index.html?v',
   BASE_PATH + 'manifest.json',
   BASE_PATH + 'icon-192.png',
   BASE_PATH + 'icon-512.png'
@@ -65,4 +65,5 @@ self.addEventListener('fetch', (event) => {
         return caches.match(BASE_PATH + 'index.html');
       })
   );
+
 });
