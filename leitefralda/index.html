@@ -25,6 +25,7 @@
             display: flex;
             flex-direction: column;
             color: #1f2937;
+            overscroll-behavior-y: contain; /* Previne pull-to-refresh */
         }
 
         .container {
@@ -337,6 +338,37 @@
             font-weight: 500;
         }
 
+        .refresh-warning {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease-out;
+            display: none;
+        }
+
+        .refresh-warning.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
         .fralda-grid {
             display: grid;
             gap: 12px;
@@ -507,6 +539,11 @@
         </div>
     </div>
 
+    <!-- Aviso de atualização bloqueada -->
+    <div id="refreshWarning" class="refresh-warning">
+        ⚠️ Finalize ou cancele a atividade antes de atualizar
+    </div>
+
     <!-- Modal de Confirmação -->
     <div id="confirmModal" class="modal">
         <div class="modal-content">
@@ -595,6 +632,75 @@
 
             init() {
                 // Inicialização do app
+                this.setupBeforeUnload();
+                this.setupPullToRefreshBlock();
+            },
+
+            // Proteção contra atualização acidental
+            setupBeforeUnload() {
+                window.addEventListener('beforeunload', (e) => {
+                    // Verificar se há atividade em andamento
+                    if (this.hasActiveData()) {
+                        e.preventDefault();
+                        e.returnValue = ''; // Chrome exige isso
+                        return ''; // Outros navegadores
+                    }
+                });
+            },
+
+            // Bloquear pull-to-refresh quando houver dados ativos
+            setupPullToRefreshBlock() {
+                let startY = 0;
+                let warningTimeout = null;
+                
+                document.addEventListener('touchstart', (e) => {
+                    startY = e.touches[0].pageY;
+                }, { passive: true });
+                
+                document.addEventListener('touchmove', (e) => {
+                    // Se há dados ativos e está tentando puxar para baixo
+                    if (this.hasActiveData()) {
+                        const currentY = e.touches[0].pageY;
+                        const isScrollingDown = currentY > startY;
+                        const isAtTop = window.scrollY === 0;
+                        
+                        // Bloquear pull-to-refresh se estiver no topo e puxando para baixo
+                        if (isScrollingDown && isAtTop) {
+                            e.preventDefault();
+                            this.showRefreshWarning();
+                        }
+                    }
+                }, { passive: false });
+            },
+
+            showRefreshWarning() {
+                const warning = document.getElementById('refreshWarning');
+                warning.classList.add('show');
+                
+                clearTimeout(this.warningTimeout);
+                this.warningTimeout = setTimeout(() => {
+                    warning.classList.remove('show');
+                }, 3000);
+            },
+
+            hasActiveData() {
+                // Verificar se há amamentação em andamento
+                if (this.state.amamentacao.inicio && !this.state.amamentacao.fim) {
+                    return true;
+                }
+                
+                // Verificar se há modal de confirmação aberto
+                const modal = document.getElementById('confirmModal');
+                if (modal && modal.classList.contains('active')) {
+                    return true;
+                }
+                
+                // Verificar se há dados pendentes
+                if (this.state.pendingData) {
+                    return true;
+                }
+                
+                return false;
             },
 
             // Navegação
@@ -781,7 +887,7 @@
                     tipoAtividade: 'Fórmula',
                     mama: '-',
                     fralda: '-',
-                    volume: volume
+                    volume: volume + ' ml'
                 });
             },
 
