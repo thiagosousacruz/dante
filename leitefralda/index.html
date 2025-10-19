@@ -983,10 +983,20 @@
                                 ? `${item.fim}`
                                 : item.inicio;
                             
+                            // Adicionar indicador de mama para Amamentação
+                            let mamaInfo = '';
+                            if (item.tipo === 'Amamentação' && item.mama) {
+                                const letra = item.mama === 'Esquerdo' ? 'E' : 
+                                             item.mama === 'Direito' ? 'D' : '';
+                                if (letra) {
+                                    mamaInfo = ` (${letra})`;
+                                }
+                            }
+                            
                             return `
                                 <div class="historico-item">
                                     <div class="historico-info">
-                                        <div class="historico-tipo">${this.getIconeTipo(item.tipo)} ${item.tipo} - ${item.data} - ${horario}</div>
+                                        <div class="historico-tipo">${this.getIconeTipo(item.tipo)} ${item.tipo}${mamaInfo} - ${item.data} - ${horario}</div>
                                     </div>
                                 </div>
                             `;
