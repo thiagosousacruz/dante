@@ -874,7 +874,7 @@
                     if (result.status === 'ok' && result.dados && result.dados.length > 0) {
                         historicoList.innerHTML = result.dados.map(item => {
                             const horario = item.tipo === 'Amamentação' && item.fim 
-                                ? `${item.inicio} - ${item.fim}`
+                                ? `${item.fim}`
                                 : item.inicio;
                             
                             return `
