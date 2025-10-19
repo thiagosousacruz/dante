@@ -872,13 +872,19 @@
                     const result = await response.json();
 
                     if (result.status === 'ok' && result.dados && result.dados.length > 0) {
-                        historicoList.innerHTML = result.dados.map(item => `
-                            <div class="historico-item">
-                                <div class="historico-info">
-                                    <div class="historico-tipo">${this.getIconeTipo(item.tipo)} ${item.tipo} - ${item.data} - ${item.inicio}</div>
+                        historicoList.innerHTML = result.dados.map(item => {
+                            const horario = item.tipo === 'Amamentação' && item.fim 
+                                ? `${item.inicio} - ${item.fim}`
+                                : item.inicio;
+                            
+                            return `
+                                <div class="historico-item">
+                                    <div class="historico-info">
+                                        <div class="historico-tipo">${this.getIconeTipo(item.tipo)} ${item.tipo} - ${item.data} - ${horario}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        `).join('');
+                            `;
+                        }).join('');
                     } else {
                         historicoList.innerHTML = '<div class="historico-empty">Nenhuma atividade registrada ainda</div>';
                     }
