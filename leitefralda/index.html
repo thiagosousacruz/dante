@@ -424,7 +424,7 @@
             </div>
             <div class="card">
                 <button class="btn btn-primary" onclick="app.goToFormula()">
-                    🍶 Fórmula
+                    🍶 Fórmula / Leite Extraído
                 </button>
             </div>
 
@@ -516,7 +516,7 @@
             <button class="back-btn" onclick="app.goToHome()">← Voltar</button>
             
             <div class="card">
-                <h2 style="margin-bottom: 20px; text-align: center;">Fórmula</h2>
+                <h2 style="margin-bottom: 20px; text-align: center;">Fórmula / Leite Extraído</h2>
                 
                 <div id="alertFormula"></div>
                 
@@ -529,6 +529,15 @@
                         <span class="info-label">Horário:</span>
                         <span class="info-value" id="formulaHorario">-</span>
                     </div>
+                </div>
+
+                <div class="toggle-group" style="margin-bottom: 20px;">
+                    <button class="toggle-btn" id="tipoFormula" onclick="app.selectTipoAlimento('Fórmula')">
+                        🍶 Fórmula
+                    </button>
+                    <button class="toggle-btn" id="tipoLeiteMaterno" onclick="app.selectTipoAlimento('Leite Materno')">
+                        🤱 Leite Materno
+                    </button>
                 </div>
 
                 <div style="margin-bottom: 20px;">
@@ -638,7 +647,8 @@
                 formula: {
                     volume: null,
                     inicio: null,
-                    data: null
+                    data: null,
+                    tipo: null  // 'Fórmula' ou 'Leite Materno'
                 },
                 pendingData: null
             },
@@ -745,10 +755,13 @@
                 const now = new Date();
                 this.state.formula.data = this.formatDate(now);
                 this.state.formula.inicio = this.formatTime(now);
+                this.state.formula.tipo = null;
                 
                 document.getElementById('formulaData').textContent = this.state.formula.data;
                 document.getElementById('formulaHorario').textContent = this.state.formula.inicio;
                 document.getElementById('volumeInput').value = '';
+                document.getElementById('tipoFormula').classList.remove('active');
+                document.getElementById('tipoLeiteMaterno').classList.remove('active');
                 
                 this.showScreen('formulaScreen');
             },
@@ -780,7 +793,8 @@
                 this.state.formula = {
                     volume: null,
                     inicio: null,
-                    data: null
+                    data: null,
+                    tipo: null
                 };
                 
                 this.state.pendingData = null;
@@ -880,8 +894,20 @@
                 });
             },
 
-            // Fórmula
+            // Fórmula / Leite Materno
+            selectTipoAlimento(tipo) {
+                this.state.formula.tipo = tipo;
+                document.getElementById('tipoFormula').classList.toggle('active', tipo === 'Fórmula');
+                document.getElementById('tipoLeiteMaterno').classList.toggle('active', tipo === 'Leite Materno');
+                document.getElementById('alertFormula').innerHTML = '';
+            },
+
             confirmarFormula() {
+                if (!this.state.formula.tipo) {
+                    this.showAlert('alertFormula', 'Selecione o tipo (Fórmula ou Leite Materno)', 'error');
+                    return;
+                }
+                
                 const volumeInput = document.getElementById('volumeInput');
                 const volume = volumeInput.value.trim();
                 
@@ -897,7 +923,7 @@
                     data: this.state.formula.data,
                     inicio: this.state.formula.inicio,
                     fim: '',
-                    tipoAtividade: 'Fórmula',
+                    tipoAtividade: this.state.formula.tipo,
                     mama: '-',
                     fralda: '-',
                     volume: volume
@@ -1027,7 +1053,8 @@
                 const icones = {
                     'Amamentação': '🤱',
                     'Troca de Fralda': '🍼',
-                    'Fórmula': '🍶'
+                    'Fórmula': '🍶',
+                    'Leite Materno': '🤱'
                 };
                 return icones[tipo] || '📝';
             },
