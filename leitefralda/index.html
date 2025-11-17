@@ -418,6 +418,11 @@
                 </button>
             </div>
             <div class="card">
+                <button class="btn btn-primary" onclick="app.goToTummyTime()">
+                    🤸 Tummy Time
+                </button>
+            </div>
+            <div class="card">
                 <button class="btn btn-primary" onclick="app.goToFralda()">
                     🍼 Troca de Fralda
                 </button>
@@ -472,6 +477,33 @@
                     Iniciar
                 </button>
                 <button class="btn btn-danger" id="btnParar" onclick="app.pararAmamentacao()" style="display: none;">
+                    Parar
+                </button>
+            </div>
+        </div>
+
+        <!-- Tummy Time Screen -->
+        <div id="tummyTimeScreen" class="screen">
+            <button class="back-btn" onclick="app.goToHome()">← Voltar</button>
+            
+            <div class="card">
+                <h2 style="margin-bottom: 20px; text-align: center;">Tummy Time</h2>
+                
+                <div id="alertTummyTime"></div>
+
+                <div id="timerDisplayTummy" class="timer" style="display: none;">00:00</div>
+
+                <div id="infoTummyTime" class="info-section" style="display: none;">
+                    <div class="info-row">
+                        <span class="info-label">Início:</span>
+                        <span class="info-value" id="infoInicioTummy">-</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" id="btnIniciarTummy" onclick="app.iniciarTummyTime()">
+                    Iniciar
+                </button>
+                <button class="btn btn-danger" id="btnPararTummy" onclick="app.pararTummyTime()" style="display: none;">
                     Parar
                 </button>
             </div>
@@ -639,6 +671,12 @@
                     data: null,
                     timerInterval: null
                 },
+                tummyTime: {
+                    inicio: null,
+                    fim: null,
+                    data: null,
+                    timerInterval: null
+                },
                 fralda: {
                     tipo: null,
                     inicio: null,
@@ -712,6 +750,11 @@
                     return true;
                 }
                 
+                // Verificar se há Tummy Time em andamento
+                if (this.state.tummyTime.inicio && !this.state.tummyTime.fim) {
+                    return true;
+                }
+                
                 // Verificar se há modal de confirmação aberto
                 const modal = document.getElementById('confirmModal');
                 if (modal && modal.classList.contains('active')) {
@@ -736,6 +779,11 @@
             goToAmamentacao() {
                 this.resetState();
                 this.showScreen('amamentacaoScreen');
+            },
+
+            goToTummyTime() {
+                this.resetState();
+                this.showScreen('tummyTimeScreen');
             },
 
             goToFralda() {
@@ -784,6 +832,13 @@
                     timerInterval: null
                 };
                 
+                this.state.tummyTime = {
+                    inicio: null,
+                    fim: null,
+                    data: null,
+                    timerInterval: null
+                };
+                
                 this.state.fralda = {
                     tipo: null,
                     inicio: null,
@@ -808,8 +863,14 @@
                 document.getElementById('timerDisplay').style.display = 'none';
                 document.getElementById('infoAmamentacao').style.display = 'none';
                 document.getElementById('alertAmamentacao').innerHTML = '';
+                document.getElementById('alertTummyTime').innerHTML = '';
                 document.getElementById('alertFralda').innerHTML = '';
                 document.getElementById('alertFormula').innerHTML = '';
+                
+                document.getElementById('btnIniciarTummy').style.display = 'block';
+                document.getElementById('btnPararTummy').style.display = 'none';
+                document.getElementById('timerDisplayTummy').style.display = 'none';
+                document.getElementById('infoTummyTime').style.display = 'none';
             },
 
             // Amamentação
@@ -875,6 +936,57 @@
                     const minutes = Math.floor(diff / 60);
                     const seconds = diff % 60;
                     document.getElementById('timerDisplay').textContent = 
+                        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }, 1000);
+            },
+
+            // Tummy Time
+            iniciarTummyTime() {
+                const now = new Date();
+                this.state.tummyTime.inicio = this.formatTime(now);
+                this.state.tummyTime.data = this.formatDate(now);
+                
+                document.getElementById('infoInicioTummy').textContent = this.state.tummyTime.inicio;
+                document.getElementById('infoTummyTime').style.display = 'block';
+                
+                document.getElementById('btnIniciarTummy').style.display = 'none';
+                document.getElementById('btnPararTummy').style.display = 'block';
+                document.getElementById('timerDisplayTummy').style.display = 'block';
+                
+                this.startTimerTummy(now);
+            },
+
+            pararTummyTime() {
+                if (!this.state.tummyTime.inicio) {
+                    this.showAlert('alertTummyTime', 'Inicie o Tummy Time primeiro', 'error');
+                    return;
+                }
+
+                const now = new Date();
+                this.state.tummyTime.fim = this.formatTime(now);
+                
+                if (this.state.tummyTime.timerInterval) {
+                    clearInterval(this.state.tummyTime.timerInterval);
+                }
+                
+                this.showConfirmModal({
+                    data: this.state.tummyTime.data,
+                    inicio: this.state.tummyTime.inicio,
+                    fim: this.state.tummyTime.fim,
+                    tipoAtividade: 'Tummy Time',
+                    mama: '-',
+                    fralda: '-',
+                    volume: '-'
+                });
+            },
+
+            startTimerTummy(startTime) {
+                this.state.tummyTime.timerInterval = setInterval(() => {
+                    const now = new Date();
+                    const diff = Math.floor((now - startTime) / 1000);
+                    const minutes = Math.floor(diff / 60);
+                    const seconds = diff % 60;
+                    document.getElementById('timerDisplayTummy').textContent = 
                         `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 }, 1000);
             },
@@ -961,6 +1073,12 @@
                     this.resetState();
                     this.goToAmamentacao();
                 }
+                
+                // Se estava na tela de Tummy Time e cancelou após parar, resetar tudo
+                if (currentScreen && currentScreen.id === 'tummyTimeScreen') {
+                    this.resetState();
+                    this.goToTummyTime();
+                }
             },
 
             enviarDados() {
@@ -1019,7 +1137,7 @@
                     if (result.status === 'ok' && result.dados && result.dados.length > 0) {
                         historicoList.innerHTML = result.dados.map(item => {
                             const horario = item.tipo === 'Amamentação' && item.fim 
-                                ? `${item.fim}`
+                                ? `${item.inicio} - ${item.fim}`
                                 : item.inicio;
                             
                             // Adicionar indicador de mama para Amamentação
@@ -1052,6 +1170,7 @@
             getIconeTipo(tipo) {
                 const icones = {
                     'Amamentação': '🤱',
+                    'Tummy Time': '🤸',
                     'Troca de Fralda': '🍼',
                     'Fórmula': '🍶',
                     'Leite Materno': '🤱'
